@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lá Số Tử Vi - Hiển Thị Truyền Thống</title>
+    <style>
+        body {
+            font-family: 'Arial Unicode MS', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f5e6;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #8b0000;
+            margin-bottom: 20px;
+        }
+        
+        .personal-info {
+            background-color: #f0e8d8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .personal-info h3 {
+            color: #8b0000;
+            margin-bottom: 10px;
+        }
+        
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .house {
+            border: 2px solid #8b0000;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fffaf0;
+            min-height: 120px;
+            position: relative;
+        }
+        
+        .house-name {
+            font-weight: bold;
+            color: #8b0000;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .house-element {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .house-stars {
+            font-size: 11px;
+            color: #333;
+            line-height: 1.3;
+        }
+        
+        .body-house {
+            background-color: #ffe4e1;
+            border-color: #dc143c;
+        }
+        
+        .body-house .house-name {
+            color: #dc143c;
+        }
+        
+        .period-info {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .chart-details {
+            background-color: #f0e8d8;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .chart-details h3 {
+            color: #8b0000;
+            margin-bottom: 10px;
+        }
+        
+        .detail-item {
+            margin-bottom: 5px;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #8b0000;
+        }
+        
+        .form-container {
+            background-color: #f0e8d8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #8b0000;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #8b0000;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #a52a2a;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 10px;
+        }
+        
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        /* Traditional Vietnamese astrology styling */
+        .vietnamese-font {
+            font-family: 'Arial Unicode MS', 'Times New Roman', serif;
+        }
+        
+        .star-element {
+            display: inline-block;
+            margin-right: 5px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        
+        .star-element.kim { background-color: #fffacd; color: #8b4513; }
+        .star-element.moc { background-color: #f0fff0; color: #228b22; }
+        .star-element.thuy { background-color: #f0f8ff; color: #1e90ff; }
+        .star-element.hoa { background-color: #fff0f5; color: #dc143c; }
+        .star-element.tho { background-color: #f5f5dc; color: #8b4513; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="vietnamese-font">LÁ SỐ TỬ VI</h1>
+        
+        <div class="form-container">
+            <h3>Nhập Thông Tin</h3>
+            <form id="chartForm">
+                <div class="form-group">
+                    <label for="name">Họ Tên:</label>
+                    <input type="text" id="name" name="name" placeholder="Nhập họ tên (nếu có)">
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="form-group">
+                        <label for="day">Ngày Sinh:</label>
+                        <input type="number" id="day" name="day" min="1" max="31" required placeholder="Ngày">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="month">Tháng Sinh:</label>
+                        <input type="number" id="month" name="month" min="1" max="12" required placeholder="Tháng">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="year">Năm Sinh:</label>
+                        <input type="number" id="year" name="year" min="1900" max="2100" required placeholder="Năm">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <div class="form-group">
+                        <label for="hour_branch">Giờ Sinh (1-12):</label>
+                        <input type="number" id="hour_branch" name="hour_branch" min="1" max="12" required placeholder="Giờ">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gender">Giới Tính:</label>
+                        <select id="gender" name="gender" required>
+                            <option value="1">Nam</option>
+                            <option value="-1">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <div class="form-group">
+                        <label for="solar_calendar">Loại Lịch:</label>
+                        <select id="solar_calendar" name="solar_calendar">
+                            <option value="true">Dương Lịch</option>
+                            <option value="false">Âm Lịch</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timezone">Múi Giờ:</label>
+                        <input type="number" id="timezone" name="timezone" value="7" min="-12" max="12" placeholder="Múi giờ">
+                    </div>
+                </div>
+                
+                <button type="submit">LẬP LÁ SỐ</button>
+            </form>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            Đang lập lá số...
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="result" style="display: none;">
+            <div class="personal-info">
+                <h3>THÔNG TIN CÁ NHÂN</h3>
+                <div id="personalDetails"></div>
+            </div>
+            
+            <h3>BẢN ĐỒ SAO TỬ VI</h3>
+            <div class="chart-container" id="chartContainer">
+                <!-- 12 houses will be dynamically inserted here -->
+            </div>
+            
+            <div class="chart-details">
+                <h3>THÔNG TIN CHI TIẾT</h3>
+                <div id="chartDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base URL for API
+        const API_BASE = 'http://localhost:8000';
+        
+        // Handle form submission
+        document.getElementById('chartForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const requestData = {
+                name: formData.get('name') || undefined,
+                day: parseInt(formData.get('day')),
+                month: parseInt(formData.get('month')),
+                year: parseInt(formData.get('year')),
+                hour_branch: parseInt(formData.get('hour_branch')),
+                gender: parseInt(formData.get('gender')),
+                solar_calendar: formData.get('solar_calendar') === 'true',
+                timezone: parseInt(formData.get('timezone'))
+            };
+            
+            try {
+                // Send request to create chart
+                const response = await fetch(`${API_BASE}/charts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Lỗi HTTP! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display result
+                displayChart(result);
+            } catch (error) {
+                displayError(`Lỗi khi lập lá số: ${error.message}`);
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        // Display chart result
+        function displayChart(chart) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            
+            // Display personal info
+            displayPersonalInfo(chart);
+            
+            // Display chart houses
+            displayHouses(chart.houses);
+            
+            // Display chart details
+            displayChartDetails(chart.extra);
+        }
+        
+        // Display personal information
+        function displayPersonalInfo(chart) {
+            const personalDiv = document.getElementById('personalDetails');
+            
+            let html = `<div class="detail-item"><span class="detail-label">Họ Tên:</span> ${chart.request.name || 'Chưa có'}</div>`;
+            html += `<div class="detail-item"><span class="detail-label">Ngày Sinh:</span> ${chart.request.day}/${chart.request.month}/${chart.request.year}</div>`;
+            html += `<div class="detail-item"><span class="detail-label">Giờ Sinh:</span> ${chart.request.hour_branch}</div>`;
+            html += `<div class="detail-item"><span class="detail-label">Giới Tính:</span> ${chart.request.gender === 1 ? 'Nam' : 'Nữ'}</div>`;
+            html += `<div class="detail-item"><span class="detail-label">Loại Lịch:</span> ${chart.request.solar_calendar ? 'Dương Lịch' : 'Âm Lịch'}</div>`;
+            
+            personalDiv.innerHTML = html;
+        }
+        
+        // Display the 12 houses
+        function displayHouses(houses) {
+            const container = document.getElementById('chartContainer');
+            container.innerHTML = '';
+            
+            houses.forEach((house, index) => {
+                const houseDiv = document.createElement('div');
+                houseDiv.className = `house ${house.is_body_house ? 'body-house' : ''}`;
+                
+                let html = `<div class="house-name">${house.name}</div>`;
+                html += `<div class="house-element">${house.element}</div>`;
+                
+                if (house.stars && house.stars.length > 0) {
+                    html += `<div class="house-stars">`;
+                    house.stars.forEach(star => {
+                        const elementClass = getElementClass(star.element);
+                        html += `<span class="star-element ${elementClass}">${star.name}</span>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                if (house.major_period || house.minor_period) {
+                    html += `<div class="period-info">`;
+                    if (house.major_period) {
+                        html += `Đại hạn: ${house.major_period}<br>`;
+                    }
+                    if (house.minor_period) {
+                        html += `Tiểu hạn: ${house.minor_period}`;
+                    }
+                    html += `</div>`;
+                }
+                
+                houseDiv.innerHTML = html;
+                container.appendChild(houseDiv);
+            });
+        }
+        
+        // Display chart details
+        function displayChartDetails(extra) {
+            const detailsDiv = document.getElementById('chartDetails');
+            
+            let html = '';
+            if (extra.solar_date) {
+                html += `<div class="detail-item"><span class="detail-label">Ngày Dương Lịch:</span> ${extra.solar_date}</div>`;
+            }
+            if (extra.lunar_date) {
+                html += `<div class="detail-item"><span class="detail-label">Ngày Âm Lịch:</span> ${extra.lunar_date}</div>`;
+            }
+            if (extra.stem_branch) {
+                html += `<div class="detail-item"><span class="detail-label">Can Chi:</span> Năm ${extra.stem_branch.year}, Tháng ${extra.stem_branch.month}, Ngày ${extra.stem_branch.day}</div>`;
+            }
+            if (extra.cuc) {
+                html += `<div class="detail-item"><span class="detail-label">Cục:</span> ${extra.cuc}</div>`;
+            }
+            if (extra.menh) {
+                html += `<div class="detail-item"><span class="detail-label">Mệnh:</span> ${extra.menh}</div>`;
+            }
+            if (extra.menh_vs_cuc) {
+                html += `<div class="detail-item"><span class="detail-label">Mệnh vs Cục:</span> ${extra.menh_vs_cuc}</div>`;
+            }
+            
+            detailsDiv.innerHTML = html;
+        }
+        
+        // Get CSS class for element
+        function getElementClass(element) {
+            const elementMap = {
+                'Kim': 'kim',
+                'Mộc': 'moc',
+                'Thủy': 'thuy',
+                'Hỏa': 'hoa',
+                'Thổ': 'tho'
+            };
+            return elementMap[element] || '';
+        }
+        
+        // Display error message
+        function displayError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = `<strong>Lỗi:</strong> ${message}`;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -25,7 +25,7 @@ class Sao(object):
         """
 
     def __init__(self, saoID, saoTen, saoNguHanh, saoLoai=2, saoPhuongVi="",
-                 saoAmDuong="", vongTrangSinh=0):
+                 saoAmDuong=None, vongTrangSinh=0):
         super(Sao, self).__init__()
         self.saoID = saoID
         self.saoTen = saoTen

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Kristinas/.claude/agents/**)",
+      "Bash(dir \"C:\\Users\\Kristinas\\.claude\\agents\")",
+      "Bash(tree:*)",
+      "Bash(dir \"C:\\Code\\lasotuvi\\lasotuvi\\__init__.py\")",
+      "Bash(dir:*)",
+      "Read(//c/Code/AI-based-Physiognomy-Flutter/**)",
+      "Bash(git log:*)",
+      "Bash(findstr:*)",
+      "Read(//c/Code/badminton-academy-mobile-main/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

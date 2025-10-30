@@ -1,0 +1,792 @@
+{
+  "title": "Hướng dẫn đầy đủ API Response - La Số Tử Vi",
+  "version": "0.2.0",
+  "last_updated": "2025-10-30",
+
+  "endpoints": {
+    "create_chart": {
+      "method": "POST",
+      "path": "/charts",
+      "description": "Tạo lá số tử vi mới và lưu vào database",
+      "request_body": {
+        "day": {
+          "type": "integer",
+          "required": true,
+          "range": "1-31",
+          "description": "Ngày sinh"
+        },
+        "month": {
+          "type": "integer",
+          "required": true,
+          "range": "1-12",
+          "description": "Tháng sinh"
+        },
+        "year": {
+          "type": "integer",
+          "required": true,
+          "description": "Năm sinh (4 chữ số)"
+        },
+        "hour_branch": {
+          "type": "integer",
+          "required": true,
+          "range": "1-12",
+          "description": "Chi giờ sinh",
+          "mapping": {
+            "1": "Tý (23h-01h)",
+            "2": "Sửu (01h-03h)",
+            "3": "Dần (03h-05h)",
+            "4": "Mão (05h-07h)",
+            "5": "Thìn (07h-09h)",
+            "6": "Tỵ (09h-11h)",
+            "7": "Ngọ (11h-13h)",
+            "8": "Mùi (13h-15h)",
+            "9": "Thân (15h-17h)",
+            "10": "Dậu (17h-19h)",
+            "11": "Tuất (19h-21h)",
+            "12": "Hợi (21h-23h)"
+          }
+        },
+        "gender": {
+          "type": "integer",
+          "required": true,
+          "values": [1, -1],
+          "description": "Giới tính: 1 = Nam, -1 = Nữ"
+        },
+        "name": {
+          "type": "string",
+          "required": false,
+          "default": null,
+          "description": "Tên người xem lá số"
+        },
+        "solar_calendar": {
+          "type": "boolean",
+          "required": false,
+          "default": true,
+          "description": "true = dương lịch, false = âm lịch"
+        },
+        "timezone": {
+          "type": "integer",
+          "required": false,
+          "default": 7,
+          "description": "Múi giờ (UTC+7 cho Việt Nam)"
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "description": "Xem phần 'response_structure' bên dưới"
+      }
+    },
+    "get_chart": {
+      "method": "GET",
+      "path": "/charts/{chart_id}",
+      "description": "Lấy lá số đã lưu theo ID",
+      "parameters": {
+        "chart_id": {
+          "type": "integer",
+          "required": true,
+          "description": "ID của lá số"
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "description": "Xem phần 'response_structure' bên dưới"
+      },
+      "error_responses": {
+        "404": {
+          "detail": "Chart not found"
+        }
+      }
+    },
+    "list_charts": {
+      "method": "GET",
+      "path": "/charts",
+      "description": "Lấy danh sách các lá số gần nhất",
+      "query_parameters": {
+        "limit": {
+          "type": "integer",
+          "required": false,
+          "default": 20,
+          "description": "Số lượng lá số tối đa trả về"
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "description": "Mảng các ChartResponse (xem phần 'response_structure')"
+      }
+    }
+  },
+
+  "response_structure": {
+    "id": {
+      "type": "integer|null",
+      "description": "ID của lá số trong database (null khi mới tạo chưa lưu)",
+      "example": 123
+    },
+    "request": {
+      "type": "ChartRequest",
+      "description": "Thông tin input ban đầu từ user",
+      "see": "endpoints.create_chart.request_body"
+    },
+    "houses": {
+      "type": "array[HouseInfo]",
+      "length": 12,
+      "description": "12 cung trong lá số tử vi, theo thứ tự house_number từ 1-12",
+      "structure": {
+        "house_number": {
+          "type": "integer",
+          "range": "1-12",
+          "description": "Số thứ tự cung (dùng để sắp xếp)",
+          "example": 3
+        },
+        "branch": {
+          "type": "string",
+          "description": "Tên chi của cung",
+          "possible_values": ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"],
+          "example": "Dần"
+        },
+        "name": {
+          "type": "string",
+          "description": "Tên cung chủ",
+          "possible_values": ["Mệnh", "Phụ mẫu", "Phúc đức", "Điền trạch", "Quan lộc", "Nô bộc", "Thiên di", "Tật Ách", "Tài Bạch", "Tử tức", "Phu thê", "Huynh đệ"],
+          "meanings": {
+            "Mệnh": "Cung mệnh - Bản chất, tính cách, số phận",
+            "Phụ mẫu": "Cung phụ mẫu - Quan hệ với cha mẹ, người lớn tuổi",
+            "Phúc đức": "Cung phúc đức - Tinh thần, suy nghĩ, giá trị sống",
+            "Điền trạch": "Cung điền trạch - Nhà cửa, bất động sản",
+            "Quan lộc": "Cung quan lộc - Sự nghiệp, công danh",
+            "Nô bộc": "Cung nô bộc - Bạn bè, đồng nghiệp, nhân viên",
+            "Thiên di": "Cung thiên di - Di chuyển, du lịch, môi trường bên ngoài",
+            "Tật Ách": "Cung tật ách - Sức khỏe, bệnh tật",
+            "Tài Bạch": "Cung tài bạch - Tài chính, tiền bạc",
+            "Tử tức": "Cung tử tức - Con cái, người trẻ tuổi",
+            "Phu thê": "Cung phu thê - Vợ chồng, tình cảm",
+            "Huynh đệ": "Cung huynh đệ - Anh chị em, bạn bè thân"
+          },
+          "example": "Mệnh"
+        },
+        "element": {
+          "type": "string",
+          "description": "Ngũ hành của cung",
+          "possible_values": ["Kim", "Mộc", "Thủy", "Hỏa", "Thổ"],
+          "example": "Mộc"
+        },
+        "am_duong": {
+          "type": "integer",
+          "description": "Âm dương của cung",
+          "possible_values": [1, -1],
+          "mapping": {
+            "1": "Dương",
+            "-1": "Âm"
+          },
+          "example": 1
+        },
+        "is_body_house": {
+          "type": "boolean",
+          "description": "Cung Thân - cung quan trọng thứ 2 sau cung Mệnh",
+          "example": true
+        },
+        "tuan_trung": {
+          "type": "boolean",
+          "description": "Có Tuần Triệt - cung bị yếu, cần chú ý",
+          "example": false
+        },
+        "triet_lo": {
+          "type": "boolean",
+          "description": "Có Triệt Lộ - cung bị gián đoạn, trở ngại",
+          "example": false
+        },
+        "major_period": {
+          "type": "integer|null",
+          "description": "Đại hạn - tuổi bắt đầu đại hạn của cung này",
+          "range": "5-115",
+          "step": 10,
+          "example": 35
+        },
+        "minor_period": {
+          "type": "string|null",
+          "description": "Tiểu hạn - chi tiểu hạn",
+          "possible_values": ["Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi"],
+          "example": "Thìn"
+        },
+        "stars": {
+          "type": "array[StarInfo]",
+          "description": "Danh sách các sao trong cung (có thể có 0-15+ sao)",
+          "see": "star_structure"
+        }
+      }
+    },
+    "extra": {
+      "type": "object",
+      "description": "Thông tin tổng quan và bổ sung",
+      "see": "extra_structure"
+    }
+  },
+
+  "star_structure": {
+    "star_id": {
+      "type": "integer",
+      "range": "1-109",
+      "description": "ID duy nhất của sao trong hệ thống",
+      "example": 4
+    },
+    "name": {
+      "type": "string",
+      "description": "Tên sao",
+      "example": "Vũ khúc",
+      "see": "star_list"
+    },
+    "element": {
+      "type": "string",
+      "description": "Ngũ hành của sao",
+      "possible_values": ["K", "M", "T", "H", "O"],
+      "mapping": {
+        "K": "Kim",
+        "M": "Mộc",
+        "T": "Thủy",
+        "H": "Hỏa",
+        "O": "Thổ"
+      },
+      "example": "K"
+    },
+    "category": {
+      "type": "integer",
+      "description": "Loại sao",
+      "see": "star_categories",
+      "example": 1
+    },
+    "strength": {
+      "type": "string|null",
+      "description": "Độ sáng/trạng thái của sao",
+      "possible_values": ["V", "M", "H", "Đ", null],
+      "mapping": {
+        "V": "Vượng - Cực mạnh, tốt nhất",
+        "M": "Miếu - Rất tốt, sáng rực",
+        "H": "Hòa - Tốt, hài hòa",
+        "Đ": "Đắc địa - Được vị trí tốt",
+        "null": "Bình thường hoặc không áp dụng"
+      },
+      "example": "V"
+    },
+    "direction": {
+      "type": "string|null",
+      "description": "Phương vị sao thuộc hệ nào",
+      "possible_values": ["Bắc đẩu tinh", "Nam đẩu tinh", "Đế tinh", ""],
+      "meaning": {
+        "Bắc đẩu tinh": "Thuộc hệ Bắc Đẩu - chủ về biến động, năng lực",
+        "Nam đẩu tinh": "Thuộc hệ Nam Đẩu - chủ về ổn định, phúc đức",
+        "Đế tinh": "Sao Đế - Tử Vi tinh quân"
+      },
+      "example": "Bắc đẩu tinh"
+    },
+    "am_duong": {
+      "type": "integer|string|null",
+      "description": "Âm dương của sao",
+      "possible_values": [1, -1, 0, ""],
+      "mapping": {
+        "1": "Dương",
+        "-1": "Âm",
+        "0": "Trung tính",
+        "": "Không xác định"
+      },
+      "example": -1
+    },
+    "trang_sinh": {
+      "type": "integer",
+      "description": "Thuộc vòng Tràng sinh hay không",
+      "possible_values": [0, 1],
+      "mapping": {
+        "0": "Không thuộc vòng Tràng sinh",
+        "1": "Thuộc vòng Tràng sinh (12 giai đoạn sinh lão bệnh tử)"
+      },
+      "example": 0
+    },
+    "css_class": {
+      "type": "string|null",
+      "description": "CSS class để styling theo ngũ hành",
+      "possible_values": ["hanhKim", "hanhMoc", "hanhThuy", "hanhHoa", "hanhTho"],
+      "example": "hanhKim"
+    }
+  },
+
+  "extra_structure": {
+    "name": {
+      "type": "string|null",
+      "description": "Tên người xem lá số",
+      "example": "Nguyễn Văn A"
+    },
+    "gender": {
+      "type": "string",
+      "values": ["Nam", "Nữ"],
+      "description": "Giới tính (text)",
+      "example": "Nam"
+    },
+    "gender_value": {
+      "type": "integer",
+      "values": [1, -1],
+      "description": "Giới tính (số): 1=Nam, -1=Nữ",
+      "example": 1
+    },
+    "hour": {
+      "type": "string",
+      "description": "Giờ sinh (Can Chi đầy đủ)",
+      "example": "Mậu Tý"
+    },
+    "hour_can_chi": {
+      "type": "string",
+      "description": "Chi giờ sinh (chỉ Chi)",
+      "example": "Tý"
+    },
+    "solar_date": {
+      "type": "string",
+      "format": "d/m/yyyy",
+      "description": "Ngày dương lịch",
+      "example": "1/1/1990"
+    },
+    "lunar_date": {
+      "type": "string",
+      "format": "d/m/yyyy",
+      "description": "Ngày âm lịch (chuyển đổi từ dương lịch)",
+      "example": "5/12/1989"
+    },
+    "thang_nhuan": {
+      "type": "integer|null",
+      "description": "Tháng nhuận: 0=không, 1-12=tháng nhuận",
+      "example": 0
+    },
+    "stem_branch": {
+      "type": "object",
+      "description": "Can Chi (text) của năm/tháng/ngày/giờ",
+      "fields": {
+        "year": "Can Chi năm (VD: Kỷ Tỵ)",
+        "month": "Can Chi tháng (VD: Đinh Hợi)",
+        "day": "Can Chi ngày (VD: Bính Dần)",
+        "hour": "Can Chi giờ (VD: Mậu Tý)"
+      }
+    },
+    "stem_branch_numbers": {
+      "type": "object",
+      "description": "Can Chi (số) để tính toán",
+      "fields": {
+        "can_nam": {
+          "type": "integer",
+          "range": "1-10",
+          "mapping": {
+            "1": "Giáp", "2": "Ất", "3": "Bính", "4": "Đinh", "5": "Mậu",
+            "6": "Kỷ", "7": "Canh", "8": "Tân", "9": "Nhâm", "10": "Quý"
+          }
+        },
+        "chi_nam": {
+          "type": "integer",
+          "range": "1-12",
+          "mapping": {
+            "1": "Tý", "2": "Sửu", "3": "Dần", "4": "Mão", "5": "Thìn", "6": "Tỵ",
+            "7": "Ngọ", "8": "Mùi", "9": "Thân", "10": "Dậu", "11": "Tuất", "12": "Hợi"
+          }
+        },
+        "can_thang": "Số can tháng (1-10)",
+        "chi_thang": "Số chi tháng (1-12)",
+        "can_ngay": "Số can ngày (1-10)",
+        "chi_ngay": "Số chi ngày (1-12)",
+        "can_gio_sinh": "Số can giờ (1-10)"
+      }
+    },
+    "cuc": {
+      "type": "string",
+      "description": "Tên cục đầy đủ",
+      "possible_values": [
+        "Thủy nhị Cục (Thủy 2 cục)",
+        "Mộc tam Cục (Mộc 3 cục)",
+        "Kim tứ Cục (Kim 4 cục)",
+        "Thổ ngũ Cục (Thổ 5 cục)",
+        "Hỏa lục Cục (Hỏa 6 cục)"
+      ],
+      "meaning": "Cục định ra đại hạn và vận khí của lá số",
+      "example": "Hỏa lục Cục"
+    },
+    "hanh_cuc": {
+      "type": "integer",
+      "range": "1-5",
+      "description": "ID ngũ hành của cục",
+      "mapping": {
+        "1": "Mộc",
+        "2": "Hỏa",
+        "3": "Thổ",
+        "4": "Kim",
+        "5": "Thủy"
+      },
+      "example": 4
+    },
+    "menh": {
+      "type": "string",
+      "description": "Bản mệnh (Nạp Âm) - 1 trong 60 loại mệnh",
+      "examples": [
+        "HẢI TRUNG KIM",
+        "LƯ TRUNG HỎA",
+        "ÐẠI LÂM MỘC",
+        "LỘ BÀN THỔ",
+        "KIM BẠC KIM",
+        "GIÁP TỬ KIM",
+        "SƠN HẠ HỎA",
+        "BÌNH ÐỊA MỘC"
+      ],
+      "example": "ÐẠI LÂM MỘC"
+    },
+    "menh_id": {
+      "type": "string",
+      "description": "ID ngũ hành bản mệnh",
+      "possible_values": ["M", "H", "O", "K", "T"],
+      "mapping": {
+        "M": "Mộc",
+        "H": "Hỏa",
+        "O": "Thổ",
+        "K": "Kim",
+        "T": "Thủy"
+      },
+      "example": "M"
+    },
+    "menh_chu": {
+      "type": "string",
+      "description": "Sao Mệnh chủ - sao chủ đạo cung Mệnh (rất quan trọng)",
+      "possible_values": "Tên 1 trong 14 sao chính",
+      "example": "Vũ khúc"
+    },
+    "than_chu": {
+      "type": "string",
+      "description": "Sao Thân chủ - sao chủ đạo cung Thân (quan trọng thứ 2)",
+      "possible_values": "Tên 1 trong 14 sao chính",
+      "example": "Thiên cơ"
+    },
+    "menh_vs_cuc": {
+      "type": "string",
+      "description": "Quan hệ ngũ hành giữa Bản mệnh và Cục",
+      "possible_values": [
+        "Bản Mệnh sinh Cục",
+        "Cục sinh Bản Mệnh",
+        "Bản Mệnh khắc Cục",
+        "Cục khắc Bản Mệnh",
+        "Bản Mệnh và Cục hòa hợp"
+      ],
+      "meaning": {
+        "Bản Mệnh sinh Cục": "Tốt - tự mình tạo dựng vận mệnh",
+        "Cục sinh Bản Mệnh": "Rất tốt - được vận mệnh nâng đỡ",
+        "Bản Mệnh khắc Cục": "Khó khăn - phải vượt qua thử thách",
+        "Cục khắc Bản Mệnh": "Thử thách - áp lực từ môi trường",
+        "Bản Mệnh và Cục hòa hợp": "Trung bình - ổn định"
+      },
+      "example": "Bản Mệnh sinh Cục"
+    },
+    "am_duong_nam_sinh": {
+      "type": "string",
+      "values": ["Dương", "Âm"],
+      "description": "Âm dương năm sinh (dựa vào can năm)",
+      "example": "Âm"
+    },
+    "am_duong_menh": {
+      "type": "string",
+      "values": ["Âm dương thuận lý", "Âm dương nghịch lý"],
+      "description": "Quan hệ âm dương giữa cung Mệnh và giới tính",
+      "meaning": {
+        "Âm dương thuận lý": "Hài hòa - nam dương nữ âm phù hợp với cung",
+        "Âm dương nghịch lý": "Nghịch - cần linh hoạt, thích nghi"
+      },
+      "example": "Âm dương thuận lý"
+    },
+    "timezone": {
+      "type": "integer",
+      "description": "Múi giờ UTC offset",
+      "example": 7
+    },
+    "today": {
+      "type": "string",
+      "format": "d/m/yyyy",
+      "description": "Ngày lập lá số",
+      "example": "21/10/2025"
+    }
+  },
+
+  "star_categories": {
+    "1": {
+      "name": "Chính tinh",
+      "description": "14 sao chính, quan trọng nhất trong lá số",
+      "count": 14,
+      "stars": [
+        "Tử vi", "Liêm trinh", "Thiên đồng", "Vũ khúc", "Thái Dương", "Thiên cơ",
+        "Thiên phủ", "Thái âm", "Tham lang", "Cự môn", "Thiên tướng", "Thiên lương",
+        "Thất sát", "Phá quân"
+      ]
+    },
+    "2": {
+      "name": "Phụ tinh",
+      "description": "Sao phụ, hỗ trợ sao chính",
+      "examples": ["Lực sĩ", "Thanh long", "Tiểu hao"]
+    },
+    "3": {
+      "name": "Quý tinh",
+      "description": "Sao quý nhân, mang lại may mắn",
+      "examples": ["Lộc tồn", "Thiên quý", "Long trì", "Phượng các", "Ân quang"]
+    },
+    "4": {
+      "name": "Quyền tinh",
+      "description": "Sao quyền lực, uy tín",
+      "examples": ["Tướng quân", "Tấu thư", "Phi liêm", "Quan đới"]
+    },
+    "5": {
+      "name": "Phúc tinh",
+      "description": "Sao tốt, mang lại phúc lành",
+      "examples": ["Long đức", "Phúc đức", "Thiếu dương", "Thiếu âm", "Thiên đức", "Nguyệt đức"]
+    },
+    "6": {
+      "name": "Văn tinh",
+      "description": "Sao văn, trí tuệ, học vấn",
+      "examples": ["Văn xương", "Văn khúc", "Thiên khôi", "Thai phụ", "Phong cáo"]
+    },
+    "7": {
+      "name": "Khoa/Đài các",
+      "description": "Sao khoa bảng, danh vọng",
+      "examples": ["Tam thai", "Bát tọa", "Lâm quan"]
+    },
+    "8": {
+      "name": "Đào hoa tinh",
+      "description": "Sao tình duyên, hôn nhân",
+      "examples": ["Đào hoa", "Hồng loan"]
+    },
+    "11": {
+      "name": "Hung tinh",
+      "description": "Sao xấu, cần cẩn trọng",
+      "examples": ["Đà la", "Kình dương", "Hỏa tinh", "Linh tinh", "Địa không", "Địa kiếp", "Thiên không"]
+    },
+    "12": {
+      "name": "Sát tinh/Bại tinh",
+      "description": "Sao sát, chướng ngại",
+      "examples": ["Tuế phá", "Bạch hổ", "Điếu khách", "Bệnh phù", "Đại hao", "Quan phù", "Tử phù"]
+    },
+    "13": {
+      "name": "Ám tinh/Đặc biệt",
+      "description": "Sao đặc biệt, ảnh hưởng khác",
+      "examples": ["Phục binh", "Cô thần", "Quả tú"]
+    },
+    "14": {
+      "name": "Trung tính",
+      "description": "Sao trung lập, có thể tốt hoặc xấu tùy hoàn cảnh",
+      "examples": ["Thai", "Dưỡng", "Hoa cái"]
+    },
+    "15": {
+      "name": "Hình tinh",
+      "description": "Sao hình pháp, kỷ luật",
+      "examples": ["Thái tuế", "Thiên hình"]
+    },
+    "16": {
+      "name": "Phi tinh",
+      "description": "Sao tranh chấp",
+      "examples": ["Trực phù"]
+    }
+  },
+
+  "star_list": {
+    "14_major_stars": {
+      "tu_vi_he": [
+        {"id": 1, "name": "Tử vi", "meaning": "Đế vương tinh, quyền lực cao nhất"},
+        {"id": 2, "name": "Liêm trinh", "meaning": "Phép tắc, nguyên tắc, cương trực"},
+        {"id": 3, "name": "Thiên đồng", "meaning": "Phúc đức, vui vẻ, an nhàn"},
+        {"id": 4, "name": "Vũ khúc", "meaning": "Tài chính, quyết đoán, nghiêm khắc"},
+        {"id": 5, "name": "Thái Dương", "meaning": "Nam tính, sáng suốt, công danh"},
+        {"id": 6, "name": "Thiên cơ", "meaning": "Trí tuệ, mưu lược, nhạy bén"}
+      ],
+      "thien_phu_he": [
+        {"id": 7, "name": "Thiên phủ", "meaning": "Lãnh đạo, quản lý, dung hòa"},
+        {"id": 8, "name": "Thái âm", "meaning": "Nữ tính, dịu dàng, nội tâm"},
+        {"id": 9, "name": "Tham lang", "meaning": "Ham muốn, đa năng, giao tiếp"},
+        {"id": 10, "name": "Cự môn", "meaning": "Tranh luận, biện giải, nghi ngờ"},
+        {"id": 11, "name": "Thiên tướng", "meaning": "Trợ lực, hỗ trợ, thực tế"},
+        {"id": 12, "name": "Thiên lương", "meaning": "Phân tích, trung lập, giải quyết"},
+        {"id": 13, "name": "Thất sát", "meaning": "Quyết liệt, độc lập, dũng cảm"},
+        {"id": 14, "name": "Phá quân", "meaning": "Đột phá, thay đổi, cách tân"}
+      ]
+    },
+    "note": "Có tổng cộng 109 sao trong hệ thống, bao gồm 14 sao chính và 95 sao phụ khác"
+  },
+
+  "complete_example_response": {
+    "id": 1,
+    "request": {
+      "day": 1,
+      "month": 1,
+      "year": 1990,
+      "hour_branch": 1,
+      "gender": 1,
+      "name": "Nguyễn Văn A",
+      "solar_calendar": true,
+      "timezone": 7
+    },
+    "houses": [
+      {
+        "house_number": 1,
+        "branch": "Tý",
+        "name": "Phu thê",
+        "element": "Thủy",
+        "am_duong": 1,
+        "is_body_house": false,
+        "tuan_trung": false,
+        "triet_lo": false,
+        "major_period": 105,
+        "minor_period": "Dần",
+        "stars": [
+          {
+            "star_id": 9,
+            "name": "Tham lang",
+            "element": "T",
+            "category": 1,
+            "strength": "H",
+            "direction": "Bắc đẩu tinh",
+            "am_duong": -1,
+            "trang_sinh": 0,
+            "css_class": "hanhThuy"
+          },
+          {
+            "star_id": 70,
+            "name": "Thiên hư",
+            "element": "T",
+            "category": 12,
+            "strength": "Đ",
+            "direction": "",
+            "am_duong": "",
+            "trang_sinh": 0,
+            "css_class": "hanhThuy"
+          }
+        ]
+      },
+      {
+        "house_number": 3,
+        "branch": "Dần",
+        "name": "Mệnh",
+        "element": "Mộc",
+        "am_duong": 1,
+        "is_body_house": true,
+        "tuan_trung": false,
+        "triet_lo": false,
+        "major_period": 5,
+        "minor_period": "Thìn",
+        "stars": [
+          {
+            "star_id": 4,
+            "name": "Vũ khúc",
+            "element": "K",
+            "category": 1,
+            "strength": "V",
+            "direction": "Bắc đẩu tinh",
+            "am_duong": -1,
+            "trang_sinh": 0,
+            "css_class": "hanhKim"
+          },
+          {
+            "star_id": 11,
+            "name": "Thiên tướng",
+            "element": "T",
+            "category": 1,
+            "strength": "M",
+            "direction": "Nam đẩu tinh",
+            "am_duong": 1,
+            "trang_sinh": 0,
+            "css_class": "hanhThuy"
+          }
+        ]
+      }
+    ],
+    "extra": {
+      "name": "Nguyễn Văn A",
+      "gender": "Nam",
+      "gender_value": 1,
+      "hour": "Mậu Tý",
+      "hour_can_chi": "Tý",
+      "solar_date": "1/1/1990",
+      "lunar_date": "5/12/1989",
+      "thang_nhuan": 0,
+      "stem_branch": {
+        "year": "Kỷ Tỵ",
+        "month": "Đinh Hợi",
+        "day": "Bính Dần",
+        "hour": "Mậu Tý"
+      },
+      "stem_branch_numbers": {
+        "can_nam": 6,
+        "chi_nam": 6,
+        "can_thang": 4,
+        "chi_thang": 12,
+        "can_ngay": 3,
+        "chi_ngay": 3,
+        "can_gio_sinh": 5
+      },
+      "cuc": "Hỏa lục Cục",
+      "hanh_cuc": 4,
+      "menh": "ÐẠI LÂM MỘC",
+      "menh_id": "M",
+      "menh_chu": "Vũ khúc",
+      "than_chu": "Thiên cơ",
+      "menh_vs_cuc": "Bản Mệnh sinh Cục",
+      "am_duong_nam_sinh": "Âm",
+      "am_duong_menh": "Âm dương thuận lý",
+      "timezone": 7,
+      "today": "30/10/2025"
+    }
+  },
+
+  "usage_guide": {
+    "how_to_call_api": {
+      "curl_example": "curl -X POST http://localhost:8000/charts -H 'Content-Type: application/json' -d '{\"day\":1,\"month\":1,\"year\":1990,\"hour_branch\":1,\"gender\":1,\"name\":\"Test\",\"solar_calendar\":true,\"timezone\":7}'",
+      "javascript_example": "const response = await fetch('http://localhost:8000/charts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ day: 1, month: 1, year: 1990, hour_branch: 1, gender: 1, name: 'Test', solar_calendar: true, timezone: 7 }) }); const data = await response.json();"
+    },
+    "how_to_display": {
+      "houses": "Hiển thị 12 cung theo house_number từ 1-12, mỗi cung hiển thị tên cung, chi, ngũ hành",
+      "stars": "Trong mỗi cung, hiển thị danh sách sao với tên, độ sáng (strength), có thể styling theo css_class",
+      "menh_than_chu": "Hiển thị Mệnh chủ và Thân chủ ở vị trí trung tâm hoặc header",
+      "special_houses": "Đánh dấu cung Mệnh (name='Mệnh'), cung Thân (is_body_house=true), và các cung có tuan_trung hoặc triet_lo",
+      "major_period": "Hiển thị đại hạn để user biết từng giai đoạn cuộc đời"
+    },
+    "important_fields": [
+      "menh_chu - Sao mệnh chủ (CỰC KỲ QUAN TRỌNG)",
+      "than_chu - Sao thân chủ (QUAN TRỌNG)",
+      "houses[*].name='Mệnh' - Cung mệnh (quan trọng nhất)",
+      "houses[*].is_body_house=true - Cung thân (quan trọng thứ 2)",
+      "stars với category=1 - 14 sao chính (ưu tiên hiển thị)",
+      "am_duong_menh - Thuận/nghịch lý",
+      "menh_vs_cuc - Quan hệ mệnh và cục"
+    ]
+  },
+
+  "error_responses": {
+    "400": {
+      "description": "Bad Request - Input không hợp lệ",
+      "example": {
+        "detail": [
+          {
+            "loc": ["body", "gender"],
+            "msg": "gender must be 1 (male) or -1 (female)",
+            "type": "value_error"
+          }
+        ]
+      }
+    },
+    "404": {
+      "description": "Not Found - Chart ID không tồn tại",
+      "example": {
+        "detail": "Chart not found"
+      }
+    },
+    "500": {
+      "description": "Internal Server Error - Lỗi server",
+      "example": {
+        "detail": "Internal server error"
+      }
+    }
+  },
+
+  "notes": {
+    "data_completeness": "API trả về 100% dữ liệu từ thư viện lasotuvi core",
+    "backward_compatible": "Tất cả fields hiện tại đều tương thích ngược với version cũ",
+    "encoding": "Response sử dụng UTF-8, hỗ trợ đầy đủ tiếng Việt có dấu",
+    "performance": "Thời gian tính toán trung bình: 100-300ms cho 1 lá số",
+    "database": "Lá số được lưu tự động vào SQLite database",
+    "cors": "API đã enable CORS, có thể gọi từ mọi origin trong development"
+  }
+}

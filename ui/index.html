@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lá Số Tử Vi - Test UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-radius: 4px;
+            display: none;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .chart-list {
+            margin-top: 30px;
+        }
+        .chart-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lá Số Tử Vi - Test UI</h1>
+        
+        <form id="chartForm">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name">
+            </div>
+            
+            <div class="form-group">
+                <label for="day">Day:</label>
+                <input type="number" id="day" name="day" min="1" max="31" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="month">Month:</label>
+                <input type="number" id="month" name="month" min="1" max="12" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="year">Year:</label>
+                <input type="number" id="year" name="year" min="1900" max="2100" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="hour_branch">Hour Branch (1-12):</label>
+                <input type="number" id="hour_branch" name="hour_branch" min="1" max="12" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="1">Male</option>
+                    <option value="-1">Female</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="solar_calendar">Calendar Type:</label>
+                <select id="solar_calendar" name="solar_calendar">
+                    <option value="true">Solar Calendar</option>
+                    <option value="false">Lunar Calendar</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="timezone">Timezone:</label>
+                <input type="number" id="timezone" name="timezone" value="7" min="-12" max="12">
+            </div>
+            
+            <button type="submit">Generate Chart</button>
+        </form>
+        
+        <div id="loading" class="loading" style="display: none;">
+            Generating chart...
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="chart-list">
+            <h2>Recent Charts</h2>
+            <button id="loadCharts">Load Recent Charts</button>
+            <div id="chartsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Base URL for API (assuming it runs on localhost:8000)
+        const API_BASE = 'http://localhost:8000';
+        
+        // Handle form submission
+        document.getElementById('chartForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const requestData = {
+                name: formData.get('name') || undefined,
+                day: parseInt(formData.get('day')),
+                month: parseInt(formData.get('month')),
+                year: parseInt(formData.get('year')),
+                hour_branch: parseInt(formData.get('hour_branch')),
+                gender: parseInt(formData.get('gender')),
+                solar_calendar: formData.get('solar_calendar') === 'true',
+                timezone: parseInt(formData.get('timezone'))
+            };
+            
+            try {
+                // Send request to create chart
+                const response = await fetch(`${API_BASE}/charts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display result
+                displayResult(result);
+            } catch (error) {
+                displayError(`Error generating chart: ${error.message}`);
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+        
+        // Load recent charts
+        document.getElementById('loadCharts').addEventListener('click', async function() {
+            try {
+                const response = await fetch(`${API_BASE}/charts`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const charts = await response.json();
+                displayCharts(charts);
+            } catch (error) {
+                displayError(`Error loading charts: ${error.message}`);
+            }
+        });
+        
+        // Display chart result
+        function displayResult(chart) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result';
+            
+            let html = `<h3>Chart Generated Successfully!</h3>`;
+            html += `<p><strong>Chart ID:</strong> ${chart.id}</p>`;
+            html += `<p><strong>Name:</strong> ${chart.request.name || 'N/A'}</p>`;
+            html += `<p><strong>Date:</strong> ${chart.request.day}/${chart.request.month}/${chart.request.year}</p>`;
+            html += `<p><strong>Hour Branch:</strong> ${chart.request.hour_branch}</p>`;
+            html += `<p><strong>Gender:</strong> ${chart.request.gender === 1 ? 'Male' : 'Female'}</p>`;
+            
+            // Display extra info
+            if (chart.extra) {
+                html += `<h4>Chart Details:</h4>`;
+                html += `<p><strong>Solar Date:</strong> ${chart.extra.solar_date}</p>`;
+                html += `<p><strong>Lunar Date:</strong> ${chart.extra.lunar_date}</p>`;
+                html += `<p><strong>Stem & Branch:</strong> ${chart.extra.stem_branch.year} - ${chart.extra.stem_branch.month} - ${chart.extra.stem_branch.day}</p>`;
+                html += `<p><strong>Cuc:</strong> ${chart.extra.cuc}</p>`;
+                html += `<p><strong>Menh:</strong> ${chart.extra.menh}</p>`;
+            }
+            
+            // Display houses
+            html += `<h4>Houses:</h4>`;
+            html += `<div style="max-height: 300px; overflow-y: auto;">`;
+            chart.houses.forEach((house, index) => {
+                html += `<div style="border: 1px solid #ccc; margin: 5px; padding: 5px;">`;
+                html += `<strong>${house.name}</strong> (${house.element})${house.is_body_house ? ' [Body House]' : ''}`;
+                if (house.stars && house.stars.length > 0) {
+                    html += `<br>Stars: ${house.stars.map(star => star.name).join(', ')}`;
+                }
+                html += `</div>`;
+            });
+            html += `</div>`;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.style.display = 'block';
+        }
+        
+        // Display charts list
+        function displayCharts(charts) {
+            const listDiv = document.getElementById('chartsList');
+            
+            if (charts.length === 0) {
+                listDiv.innerHTML = '<p>No charts found.</p>';
+                return;
+            }
+            
+            let html = '';
+            charts.forEach(chart => {
+                html += `<div class="chart-item">`;
+                html += `<p><strong>ID:</strong> ${chart.id} | <strong>Name:</strong> ${chart.request.name || 'N/A'}`;
+                html += ` | <strong>Date:</strong> ${chart.request.day}/${chart.request.month}/${chart.request.year}`;
+                html += ` | <strong>Gender:</strong> ${chart.request.gender === 1 ? 'Male' : 'Female'}</p>`;
+                html += `</div>`;
+            });
+            
+            listDiv.innerHTML = html;
+        }
+        
+        // Display error message
+        function displayError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = `<strong>Error:</strong> ${message}`;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
